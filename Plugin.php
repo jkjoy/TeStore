@@ -2,20 +2,21 @@
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 /**
  * 读取Github上维护的专用表格实现插件仓库各项功能
- * 
+ *
  * @package TeStore
- * @author 羽中, zhulin3141
- * @version 1.1.5
+ * @author 羽中, zhulin3141, Ryan, jkjoy
+ * @version 1.1.7
  * @dependence 13.12.12-*
  * @link https://www.yzmb.me/archives/net/testore-for-typecho
  * @copyright Copyright (c) 2014-2020 Yuzhong Zheng (jzwalk)
  * @license MIT
  */
+
 class TeStore_Plugin implements Typecho_Plugin_Interface
 {
 	/**
 	 * 激活插件方法,如果激活失败,直接抛出异常
-	 * 
+	 *
 	 * @access public
 	 * @return void
 	 * @throws Typecho_Plugin_Exception
@@ -46,7 +47,7 @@ class TeStore_Plugin implements Typecho_Plugin_Interface
 
 	/**
 	 * 禁用插件方法,如果禁用失败,直接抛出异常
-	 * 
+	 *
 	 * @static
 	 * @access public
 	 * @return void
@@ -62,7 +63,7 @@ class TeStore_Plugin implements Typecho_Plugin_Interface
 
 	/**
 	 * 获取插件配置面板
-	 * 
+	 *
 	 * @access public
 	 * @param Typecho_Widget_Helper_Form $form 配置面板
 	 * @return void
@@ -90,9 +91,15 @@ class TeStore_Plugin implements Typecho_Plugin_Interface
 			'24',_t('数据缓存时限'),_t('设置本地缓存数据时间'));
 		$form->addInput($cache);
 
-		$proxy = new Typecho_Widget_Helper_Form_Element_Radio('proxy',
-		array(''=>_t('否'),'cdn.jsdelivr.net/gh'=>_t('jsDelivr镜像'),'gitcdn.xyz/repo'=>_t('GitCDN镜像1'),'gitcdn.link/repo'=>_t('GitCDN镜像2')),'',_t('使用代理加速'),_t('GitHub连接不畅时可选'));
-		$form->addInput($proxy);
+        $proxy = new Typecho_Widget_Helper_Form_Element_Radio('proxy',
+            array(
+                '' => _t('否'),
+                'cdn.jsdelivr.net/gh' => _t('jsDelivr镜像'),
+                'jsd.onmicrosoft.cn/gh' => _t('渺软镜像'),
+                'https://ghmirror.pp.ua' => _t('GitHub Proxy')
+            ),
+            '',_t('使用代理加速'),_t('GitHub连接不畅时可选'));
+	    $form->addInput($proxy);
 
 		$curl = new Typecho_Widget_Helper_Form_Element_Checkbox('curl',
 		array(1=>'是'),0,	_t('cURL方式下载'),_t('默认方式无效时可尝试'));
@@ -105,7 +112,7 @@ class TeStore_Plugin implements Typecho_Plugin_Interface
 
 	/**
 	 * 检查cURL支持
-	 * 
+	 *
 	 * @param array $settings
 	 * @return string
 	 */
@@ -121,7 +128,7 @@ class TeStore_Plugin implements Typecho_Plugin_Interface
 
 	/**
 	 * 个人用户的配置面板
-	 * 
+	 *
 	 * @access public
 	 * @param Typecho_Widget_Helper_Form $form
 	 * @return void
@@ -130,21 +137,26 @@ class TeStore_Plugin implements Typecho_Plugin_Interface
 
 	/**
 	 * 输出导航按钮
-	 * 
+	 *
 	 * @access public
 	 * @return void
 	 */
-	public static function render()
+    public static function render()
 	{
-		$options = Helper::options();
-		if ($options->plugin('TeStore')->showNavMenu && Typecho_Widget::widget('Widget_User')->pass('administrator',true)){
-			echo '<a href="'.$options->adminUrl.'extending.php?panel=TeStore%2Fmarket.php"><span class="message notice"><i class="mime-script"></i>'._t('TE插件仓库').'</span></a>';
-		}
-	}
+        $options = Helper::options();
+        try {
+            $pluginOptions = $options->plugin('TeStore');
+            } catch (\Exception $e) {
+                return; // 配置不存在时直接返回
+            }
+        if ($pluginOptions->showNavMenu && Typecho_Widget::widget('Widget_User')->pass('administrator',true)){
+        echo '<a href="'.$options->adminUrl.'extending.php?panel=TeStore%2Fmarket.php"><span class="message notice"><i class="mime-script"></i>'._t('TE插件仓库').'</span></a>';
+        }
+    }
 
 	/**
 	 * 判断目录可写
-	 * 
+	 *
 	 * @access public
 	 * @return boolean
 	 */
